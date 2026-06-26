@@ -22,6 +22,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  
+  <!-- Firebase Compat CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -635,6 +639,42 @@
           </button>
           <button type="button" class="btn btn-ghost btn-block" id="btn-test-alert">
             <i data-lucide="send"></i> Send Test WhatsApp
+          </button>
+        </div>
+      </div>
+
+      <!-- Cloud Sync Card -->
+      <div class="settings-card">
+        <div class="settings-card-header-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <div class="settings-card-title" style="margin-bottom: 0;">
+            <i data-lucide="cloud"></i>
+            Cloud Synchronization (Firebase)
+          </div>
+          <span class="cloud-status-badge badge-danger" id="cloud-status-badge">Disconnected</span>
+        </div>
+
+        <div class="info-box">
+          <strong>☁️ Share Data Across Multiple Devices (Free):</strong>
+          <ol style="margin-top: 8px; padding-left: 16px; font-size: 12.5px; line-height: 1.6;">
+            <li>Go to <strong style="color:var(--text-primary)">console.firebase.google.com</strong> and create a free project.</li>
+            <li>Register a Web App and copy the config object JSON.</li>
+            <li>Go to the <strong>Firestore Database</strong> section and click "Create Database".</li>
+            <li>Under the <strong>Rules</strong> tab, change <code>allow read, write: if false;</code> to <code>allow read, write: if true;</code> and click Publish.</li>
+            <li>Paste your config JSON below, click <strong>Save Config</strong>, and then migrate your existing data.</li>
+          </ol>
+        </div>
+
+        <div class="form-group" style="margin-top: 16px;">
+          <label class="form-label" for="set-firebase-config">Firebase Configuration JSON</label>
+          <textarea id="set-firebase-config" rows="6" placeholder='{&#10;  "apiKey": "...",&#10;  "authDomain": "...",&#10;  "projectId": "...",&#10;  "appId": "..."&#10;}' style="font-family: monospace; font-size: 12px; width: 100%; border-radius: var(--radius-sm); padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-primary); outline: none;"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary btn-lg btn-block" id="btn-save-firebase">
+            <i data-lucide="save"></i> Save Config
+          </button>
+          <button type="button" class="btn btn-ghost btn-block" id="btn-migrate-firebase" style="display: none; border-color: var(--success); color: var(--success);">
+            <i data-lucide="upload-cloud"></i> Upload Local Data to Cloud
           </button>
         </div>
       </div>

@@ -42,9 +42,35 @@ const Settings = (() => {
     document.getElementById('set-token').value = s.greenApiToken || '';
     document.getElementById('set-summary-time').value = s.dailySummaryTime || '21:00';
     document.getElementById('set-enabled').checked = !!s.alertsEnabled;
+
+    // Firebase configuration rendering
+    const fbTextarea = document.getElementById('set-firebase-config');
+    if (fbTextarea) {
+      fbTextarea.value = s.firebaseConfig || '';
+    }
+
+    const badge = document.getElementById('cloud-status-badge');
+    const btnMigrate = document.getElementById('btn-migrate-firebase');
+    if (badge) {
+      if (DB.Cloud.isEnabled()) {
+        badge.textContent = 'Connected';
+        badge.classList.remove('badge-danger');
+        badge.classList.add('badge-success');
+      } else {
+        badge.textContent = 'Disconnected';
+        badge.classList.remove('badge-success');
+        badge.classList.add('badge-danger');
+      }
+    }
+    if (btnMigrate) {
+      btnMigrate.style.display = DB.Cloud.isEnabled() ? 'block' : 'none';
+    }
   };
+
   const save = () => {
+    const current = DB.getSettings();
     DB.saveSettings({
+      ...current,
       whatsappPhone: document.getElementById('set-phone').value.trim(),
       greenApiInstance: document.getElementById('set-instance').value.trim(),
       greenApiToken: document.getElementById('set-token').value.trim(),
@@ -53,10 +79,62 @@ const Settings = (() => {
     });
     showToast('Settings saved! ✅', 'success');
   };
+
+  const saveFirebase = () => {
+    const current = DB.getSettings();
+    const configStr = document.getElementById('set-firebase-config').value.trim();
+    if (configStr) {
+      try {
+        JSON.parse(configStr);
+      } catch (e) {
+        showToast('Invalid Firebase Config JSON format!', 'error');
+        return;
+      }
+    }
+    DB.saveSettings({
+      ...current,
+      firebaseConfig: configStr
+    });
+    DB.Cloud.init();
+    render();
+    if (DB.Cloud.isEnabled()) {
+      showToast('Firebase Config saved & Connected! 🟢', 'success');
+    } else {
+      showToast('Firebase Config saved (Disconnected) 🔴', 'warning');
+    }
+  };
+
+  const migrateFirebase = async () => {
+    if (!DB.Cloud.isEnabled()) {
+      showToast('Firebase is not connected!', 'error');
+      return;
+    }
+    const btn = document.getElementById('btn-migrate-firebase');
+    const originalText = btn.innerHTML;
+    try {
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader" class="animate-spin"></i> Uploading...`;
+      if (window.lucide) lucide.createIcons();
+      showToast('Migrating local data to cloud...', 'info');
+      await DB.Cloud.uploadLocalData();
+      showToast('Data uploaded to cloud successfully! 📤', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Migration failed: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      if (window.lucide) lucide.createIcons();
+    }
+  };
+
   const init = () => {
     document.getElementById('btn-save-settings').addEventListener('click', save);
     document.getElementById('btn-test-alert').addEventListener('click', () => Alerts.testAlert());
+    document.getElementById('btn-save-firebase').addEventListener('click', saveFirebase);
+    document.getElementById('btn-migrate-firebase').addEventListener('click', migrateFirebase);
   };
+
   return { render, init };
 })();
 
@@ -108,8 +186,10 @@ const BNAV_SECTIONS = ['dashboard', 'inventory', 'stock-in', 'stock-out'];
 const App = (() => {
   const sections = ['dashboard','inventory','add-item','stock-in','stock-out','history','reports','settings','finances'];
   let moreOpen = false;
+  let currentSection = 'dashboard';
 
   const navigate = (section) => {
+    currentSection = section;
     // Hide all sections
     sections.forEach(s => document.getElementById(`section-${s}`)?.classList.remove('active'));
     // Show target
@@ -174,6 +254,10 @@ const App = (() => {
 
   const init = () => {
     SEED_DATA.initialize();
+
+    // Initialize cloud sync connection
+    DB.Cloud.init();
+
     Inventory.init();
     StockIn.init();
     StockOut.init();
@@ -215,7 +299,18 @@ const App = (() => {
     lucide.createIcons();
   };
 
-  return { navigate, init, toggleMore, closeMore, updateAlertBadge };
+  const refreshCurrentSection = () => {
+    updateAlertBadge();
+    switch (currentSection) {
+      case 'dashboard': Dashboard.render(); break;
+      case 'inventory': Inventory.render(); break;
+      case 'history':   History.render(); break;
+      case 'reports':   Reports.render(); break;
+      case 'finances':  Finances.render(); break;
+    }
+  };
+
+  return { navigate, init, toggleMore, closeMore, updateAlertBadge, refreshCurrentSection };
 })();
 
 document.addEventListener('DOMContentLoaded', () => App.init());

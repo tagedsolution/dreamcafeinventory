@@ -1508,3 +1508,24 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
+/* Cloud Sync Status Badge */
+.cloud-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+.cloud-status-badge.badge-success {
+  background: rgba(0, 201, 167, 0.15);
+  color: #00c9a7;
+  border: 1px solid rgba(0, 201, 167, 0.35);
+}
+.cloud-status-badge.badge-danger {
+  background: rgba(249, 72, 74, 0.15);
+  color: #f9484a;
+  border: 1px solid rgba(249, 72, 74, 0.35);
+}
+
